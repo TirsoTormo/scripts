@@ -1,61 +1,7 @@
-# ======================================================================
-# CODETIR CONTAINER ROUTING & SELF-HEALING RULES
-# ======================================================================
-# Available Handlers:
-# - "logger" (Local rotating text log writers)
-# - "telegram", "discord", "slack" (Chat alert broadcast notifications)
-# - "docker_healer" (Restarts local or remote Docker containers)
-# - "k8s_healer" (Triggers pod deletions or rollout restarts on deployments)
-# - "ssh" (Legacy generic fallback remote command executor)
-# ======================================================================
 
 rules:
-  # Rule 1: Log General Informational telemetry
-  - name: "Log Informational Events"
-    match:
-      severity: "INFO"
-    handlers:
-      - "logger"
-
-  # Rule 2: Broadcast warning alerts to chat notification endpoints
-  - name: "Warning Level Alerts Routing"
-    match:
-      severity: "WARNING"
-    handlers:
-      - "logger"
-      - "telegram"
-      - "slack"
-      - "discord"
-
-  # Rule 3: Auto-heal Docker Postgres Container crashes
-  - name: "Automated Self-Healing for Docker Postgres"
-    match:
-      service: "docker-postgres"
-      severity: "CRITICAL"
-    handlers:
-      - "logger"
-      - "discord"
-      - "slack"
-      - "docker_healer"
-
-  # Rule 4: Auto-heal Kubernetes deployment failures (e.g. pods crashed or pending)
-  - name: "Automated Self-Healing for Kubernetes Clusters"
-    match:
-      service: "k8s-pod-failure"
-      severity: "CRITICAL"
-    handlers:
-      - "logger"
-      - "telegram"
-      - "discord"
-      - "k8s_healer"
-
-  # Rule 5: Fallback Action for generic critical alerts (restarts Docker container based on service name)
-  - name: "General Critical Failures Routing"
+  - name: "Test Rule"
     match:
       severity: "CRITICAL"
     handlers:
       - "logger"
-      - "telegram"
-      - "discord"
-      - "slack"
-      - "docker_healer"

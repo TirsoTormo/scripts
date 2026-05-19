@@ -196,8 +196,8 @@ $runNow = Read-Host
 if ($runNow -eq "y" -or $runNow -eq "yes") {
     Write-Host "[INFO] Launching Webhook Gateway ASGI Server on http://localhost:8000..." -ForegroundColor Green
     Write-Host "Press [Ctrl+C] inside terminal to shut down the server safely." -ForegroundColor Gray
-    Start-Process -FilePath ".\venv\Scripts\uvicorn.exe" -ArgumentList "main:app --host 0.0.0.0 --port 8000 --reload" -NoNewWindow
+    Start-Process -FilePath ".\venv\Scripts\uvicorn.exe" -ArgumentList "app.main:app --host 0.0.0.0 --port 8000 --reload" -NoNewWindow
 } else {
     Write-Host "To boot up the server manually, execute:" -ForegroundColor Gray
-    Write-Host "   .\venv\Scripts\uvicorn.exe main:app --host 0.0.0.0 --port 8000 --reload" -ForegroundColor Cyan
+    Write-Host "   .\venv\Scripts\uvicorn.exe app.main:app --host 0.0.0.0 --port 8000 --reload" -ForegroundColor Cyan
 }

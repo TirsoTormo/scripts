@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeTir Gateway Console</title>
+    <style>
+        :root {
+            --bg: #09090b;
+            --window-bg: #121214;
+            --panel-bg: #18181b;
+            --border: #27272a;
+            --border-hover: #3f3f46;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #ffffff;
+            --accent-bg: #ffffff;
+            --accent-text: #09090b;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --critical: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* PREMIUM MONOCHROME CONTAINER (MACBOOK STYLING) */
+        .window {
+            background-color: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 1240px;
+            height: 850px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* MACBOOK CHASSIS TRAFFIC LIGHT BAR */
+        .window-header {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-close { background-color: #ff5f56; }
+        .dot-minimize { background-color: #ffbd2e; }
+        .dot-expand { background-color: #27c93f; }
+
+        .window-title {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-weight: 500;
+        }
+
+        .window-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .system-status {
+            font-size: 0.8rem;
+            color: var(--success);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .system-status span {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        /* LOGIN/SETUP PORTAL PANEL */
+        .lock-screen {
+            background-color: var(--window-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 440px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .lock-body {
+            padding: 35px 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .lock-title {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .lock-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: -15px;
+            margin-bottom: 10px;
+        }
+
+        /* TABS NAVIGATION */
+        .tabs-header {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            padding: 0 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 14px 22px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent);
+        }
+
+        /* WORKSPACE VIEWPORTS */
+        .tab-content {
+            display: none;
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* GRID LAYOUTS */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .metric-hdr {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-val {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 10px 0 5px;
+        }
+
+        .metric-sub {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        /* PANELS AND COMPONENT LAYOUTS */
+        .dashboard-main {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .panel-title {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* MONOCHROME TABLES */
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background-color: rgba(0, 0, 0, 0.15);
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 12px 18px;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.03em;
+        }
+
+        td {
+            padding: 12px 18px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* FORM CONTROLS & PREMIUM INPUTS */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .input-control {
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--border-hover);
+        }
+
+        .select-input {
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        /* BUTTON DESIGN SYSTEM */
+        .btn {
+            background-color: var(--accent-bg);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:disabled {
+            background-color: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 1;
+        }
+
+        .btn-secondary {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-hover);
+        }
+
+        .btn-danger {
+            background-color: var(--critical);
+            color: #ffffff;
+        }
+
+        .btn-link {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            color: var(--text-primary);
+        }
+
+        /* BADGES */
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .badge-critical {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: var(--critical);
+        }
+
+        /* RBAC Badges */
+        .role-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .role-admin {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .role-operator {
+            background-color: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        .role-viewer {
+            background-color: rgba(113, 113, 122, 0.15);
+            color: #a1a1aa;
+            border: 1px solid rgba(113, 113, 122, 0.3);
+        }
+
+        /* DECORATIONS AND UTILS */
+        .snippet {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        /* RULES & LOGS VIEWER COMPONENT */
+        .code-container {
+            display: flex;
+            flex-direction: column;
+            height: 680px;
+            background-color: #0b0b0c;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .code-textarea {
+            width: 100%;
+            flex: 1;
+            background: none;
+            border: none;
+            resize: none;
+            color: #e4e4e7;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 20px;
+            outline: none;
+        }
+
+        .alert-box {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid var(--critical);
+            color: var(--critical);
+            padding: 12px 18px;
+            font-size: 0.8rem;
+            margin-bottom: 16px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .terminal-box {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background-color: #050506;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            white-space: pre-wrap;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        /* SETTINGS GRID */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .config-section-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        /* HEALTHCHECK CARDS */
+        .nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            padding: 20px;
+        }
+
+        .node-card {
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .node-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .node-alias {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .node-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+        }
+
+        .node-indicator.online {
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .node-indicator.offline {
+            background-color: var(--critical);
+            box-shadow: 0 0 8px var(--critical);
+        }
+
+        .node-indicator.simulation {
+            background-color: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+        }
+
+        .node-details {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .ping-result-box {
+            background-color: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.72rem;
+            white-space: pre-wrap;
+            display: none;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        /* LIVE SYSTEM LOGS VIEWER */
+        .logs-control-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+        }
+
+        .logs-viewer-terminal {
+            background-color: #050506;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.8rem;
+            color: #d4d4d8;
+            padding: 20px;
+            height: 600px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        /* TOAST ALERT OVERLAYS */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--success);
+            padding: 14px 20px;
+            border-radius: 6px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+            z-index: 10000;
+            font-size: 0.82rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            pointer-events: none;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* INTERACTIVE ONBOARDING TOUR STYLE GUIDELINES */
+        .tour-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(9, 9, 11, 0.65);
+            backdrop-filter: blur(4px);
+            z-index: 999999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tour-card {
+            background-color: rgba(24, 24, 27, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            width: 480px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 2px rgba(255, 255, 255, 0.05);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: tourScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes tourScaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        .tour-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+        }
+        
+        .tour-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .tour-body {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .tour-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            border-top: 1px solid var(--border);
+            padding-top: 18px;
+        }
+        
+        /* Highlight state for active tour buttons */
+        .tour-highlight {
+            position: relative;
+            z-index: 10000000 !important;
+            box-shadow: 0 0 0 4px var(--success), 0 10px 25px rgba(16, 185, 129, 0.3) !important;
+            border-radius: 4px;
+            background-color: var(--panel-bg) !important;
+            color: var(--text-primary) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ======================================================================
+         LOGIN/SETUP INTRAROUTER CONTAINER
+         ====================================================================== -->
+    <div class="lock-screen" id="lock-screen" style="display: flex;">
+        <div class="window-header">
+            <div class="traffic-lights">
+                <span class="dot dot-close"></span>
+                <span class="dot dot-minimize"></span>
+                <span class="dot dot-expand"></span>
+            </div>
+            <div class="window-title" id="lock-header-title">CodeTir Gateway Lock</div>
+            <div></div>
+        </div>
+        
+        <!-- SETUP WIZARD VIEW -->
+        <div class="lock-body" id="setup-wizard-view" style="display: none;">
+            <div class="lock-title">CodeTir Setup Wizard</div>
+            <div class="lock-subtitle">Welcome! Register your initial Administrator profile.</div>
+            
+            <div class="input-group">
+                <label for="setup-token">Master GATEWAY_TOKEN (Defined in .env)</label>
+                <input type="password" class="input-control" id="setup-token" placeholder="Enter .env master token" required>
+            </div>
+            <div class="input-group">
+                <label for="setup-user">Administrator Username</label>
+                <input type="text" class="input-control" id="setup-user" placeholder="e.g. admin" required>
+            </div>
+            <div class="input-group">
+                <label for="setup-pass">Administrator Password</label>
+                <input type="password" class="input-control" id="setup-pass" placeholder="Min. 6 characters" required>
+            </div>
+            <button class="btn" style="margin-top: 10px;" onclick="submitSetup()">Initialize CodeTir Gateway</button>
+        </div>
+
+        <!-- LOGIN FORM VIEW -->
+        <div class="lock-body" id="login-form-view" style="display: none;">
+            <div class="lock-title">CodeTir Gateway Panel</div>
+            <div class="lock-subtitle">Sign in with your user credentials to access console.</div>
+            
+            <div class="input-group">
+                <label for="login-username">Username</label>
+                <input type="text" class="input-control" id="login-username" placeholder="Enter username" required>
+            </div>
+            <div class="input-group">
+                <label for="login-password">Password</label>
+                <input type="password" class="input-control" id="login-password" placeholder="Enter password" onkeydown="if(event.key==='Enter') submitLogin()" required>
+            </div>
+            <button class="btn" style="margin-top: 10px;" onclick="submitLogin()">Sign In to Console</button>
+        </div>
+    </div>
+
+    <!-- ======================================================================
+         MAIN CONSOLE WORKSPACE WINDOW (macOS/MacBook Frame)
+         ====================================================================== -->
+    <div class="window" id="window" style="display: none;">
+        
+        <!-- MACBOOK WINDOW CHASSIS HEADER BAR -->
+        <div class="window-header">
+            <div class="traffic-lights">
+                <span class="dot dot-close" onclick="logout()"></span>
+                <span class="dot dot-minimize"></span>
+                <span class="dot dot-expand"></span>
+            </div>
+            <div class="window-title" id="console-header-title">codetir-webhook-router-v1.0.0 -- zsh</div>
+            <div class="window-actions">
+                <div class="system-status"><span></span>Gateway Online</div>
+                <button class="btn-link" style="color:var(--text-secondary); font-size:0.75rem; text-decoration:none; display:flex; align-items:center; gap:4px; padding-left:12px; border-left:1px solid var(--border);" onclick="startTour(true)">🎓 Take Tour</button>
+                <div style="font-size:0.8rem; color:var(--text-secondary); border-left:1px solid var(--border); padding-left:12px;" id="user-badge-header">User: -</div>
+                <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.75rem; width: auto;" onclick="logout()">Lock</button>
+            </div>
+        </div>
+
+        <!-- TABS SELECTOR BAR -->
+        <div class="tabs-header">
+            <button class="tab-btn active" id="btn-tab-dashboard" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab-btn" id="btn-tab-rules" onclick="switchTab('rules')">📝 Rules Editor</button>
+            <button class="tab-btn" id="btn-tab-settings" onclick="switchTab('settings')">⚙️ System Settings</button>
+            <button class="tab-btn" id="btn-tab-nodes" onclick="switchTab('nodes')">🔌 Node Healthcheck</button>
+            <button class="tab-btn" id="btn-tab-logs" onclick="switchTab('logs')">📟 Live Logs</button>
+            <button class="tab-btn" id="btn-tab-users" onclick="switchTab('users')" style="display: none;">👤 User Management</button>
+        </div>
+
+        <!-- TAB CONTENT: DASHBOARD -->
+        <div class="tab-content active" id="tab-dashboard">
+            <!-- METRICS PANEL -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-hdr">System Uptime</div>
+                    <div class="metric-val" id="stat-uptime">0h 0m 0s</div>
+                    <div class="metric-sub">Active since host boot</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-hdr">Processed Events</div>
+                    <div class="metric-val" id="stat-processed">0</div>
+                    <div class="metric-sub" id="stat-severities">CRIT: 0 | WARN: 0 | INFO: 0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-hdr">Self-Healing Success Rate</div>
+                    <div class="metric-val" id="stat-success">100%</div>
+                    <div class="metric-sub" id="stat-totals">0 OK | 0 Failures</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-hdr">Healing Engines</div>
+                    <div class="metric-val" id="stat-rules">0 Rules</div>
+                    <div class="metric-sub" id="stat-window">Window: 0s</div>
+                </div>
+            </div>
+
+            <!-- CORE WORKSPACE COLUMNS -->
+            <div class="dashboard-main">
+                
+                <!-- COLUMN 1: SQLITE LEDGER HISTORY -->
+                <div class="panel">
+                    <div class="panel-title">🛡️ Active SQLite Remediation Ledger</div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Host</th>
+                                    <th>Service</th>
+                                    <th>Remediation Action</th>
+                                    <th>Status</th>
+                                    <th>Audit Log</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledger-body">
+                                <tr>
+                                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                                        Loading ledger telemetry...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: ASYNC INGRESS TEST SIMULATOR -->
+                <div class="panel">
+                    <div class="panel-title">⚡ Container Webhook Simulator</div>
+                    <form style="padding: 20px;" onsubmit="simulateWebhook(event)">
+                        <div class="input-group">
+                            <label for="event-source">Target Cluster / Host Alias</label>
+                            <input type="text" class="input-control" id="event-source" value="k8s-local-cluster" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="event-service">Affected Service (e.g. k8s-pod-failure / docker-postgres)</label>
+                            <input type="text" class="input-control" id="event-service" value="k8s-pod-failure" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="event-severity">Alert Severity Level</label>
+                            <select id="event-severity" class="select-input">
+                                <option value="CRITICAL">🚨 CRITICAL (Triggers Container Self-Healing)</option>
+                                <option value="WARNING">⚠️ WARNING (Triggers notifications only)</option>
+                                <option value="INFO">ℹ️ INFO (Logs only)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="event-message">Alert Details / Reason</label>
+                            <input type="text" class="input-control" id="event-message" value="Pod postgres-db-prod-abcde status CrashLoopBackOff" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="sim-platform">Platform Target</label>
+                            <select id="sim-platform" class="select-input" onchange="toggleSimPlatformFields()">
+                                <option value="kubernetes">Kubernetes Cluster (kubectl rollout/delete)</option>
+                                <option value="docker">Docker Daemon (docker restart)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Kubernetes Specific Mock Fields -->
+                        <div id="sim-k8s-fields">
+                            <div class="input-group">
+                                <label for="event-namespace">Kubernetes Namespace</label>
+                                <input type="text" class="input-control" id="event-namespace" value="default">
+                            </div>
+                            <div class="input-group">
+                                <label for="event-pod">Kubernetes Pod Name (For Deletion)</label>
+                                <input type="text" class="input-control" id="event-pod" value="postgres-db-prod-abcde">
+                            </div>
+                        </div>
+
+                        <!-- Docker Specific Mock Fields -->
+                        <div id="sim-docker-fields" style="display: none;">
+                            <div class="input-group">
+                                <label for="event-container">Docker Container Name (For Restart)</label>
+                                <input type="text" class="input-control" id="event-container" value="postgres-db-prod">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn" style="margin-top: 15px;" id="sim-submit-btn">Dispatch Simulated Event</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: RULES EDITOR -->
+        <div class="tab-content" id="tab-rules">
+            <div class="alert-box" id="yaml-error-alert"></div>
+            
+            <div class="code-container">
+                <div class="panel-title" style="background-color: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);">
+                    <span>📝 Live routing_rules editor: rules.yaml</span>
+                    <button class="btn" style="width: auto; padding: 8px 24px;" id="btn-save-rules" onclick="saveRules()">Save & Hot-Reload Rules</button>
+                </div>
+                <textarea class="code-textarea" id="rules-textarea" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: SYSTEM SETTINGS -->
+        <div class="tab-content" id="tab-settings">
+            <div class="panel" style="padding: 30px;">
+                <form id="config-form" onsubmit="saveConfig(event)">
+                    <div class="config-grid">
+                        
+                        <!-- COLUMN 1: SECURITY TOKENS & ALERTS -->
+                        <div>
+                            <div class="config-section-title">Gateway Master Tokens & Limits</div>
+                            <div class="input-group">
+                                <label for="cfg-gateway-token">GATEWAY_TOKEN (Webhook Secret API Auth)</label>
+                                <input type="text" class="input-control" id="cfg-gateway-token" required>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="cfg-dedup-seconds">DEDUPLICATION_WINDOW (s)</label>
+                                    <input type="number" class="input-control" id="cfg-dedup-seconds" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="cfg-digest-seconds">DIGEST_INTERVAL (s)</label>
+                                    <input type="number" class="input-control" id="cfg-digest-seconds" required>
+                                </div>
+                            </div>
+
+                            <div class="config-section-title">Active Communication Channels</div>
+                            <div class="input-group">
+                                <label for="cfg-telegram">TELEGRAM_BOT_TOKEN</label>
+                                <input type="text" class="input-control" id="cfg-telegram">
+                            </div>
+                            <div class="input-group">
+                                <label for="cfg-telegram-chat">TELEGRAM_CHAT_ID</label>
+                                <input type="text" class="input-control" id="cfg-telegram-chat">
+                            </div>
+                            <div class="input-group">
+                                <label for="cfg-discord">DISCORD_WEBHOOK_URL</label>
+                                <input type="text" class="input-control" id="cfg-discord">
+                            </div>
+                            <div class="input-group">
+                                <label for="cfg-slack">SLACK_WEBHOOK_URL</label>
+                                <input type="text" class="input-control" id="cfg-slack">
+                            </div>
+                        </div>
+
+                        <!-- COLUMN 2: SSH REMEDIATION TARGETS & LOG ROTATION -->
+                        <div>
+                            <div class="config-section-title">Target SSH Remediation Server</div>
+                            <div class="form-row">
+                                <div class="input-group" style="grid-column: span 3;">
+                                    <label for="cfg-ssh-host">SSH_HOST (Default Rescue Server)</label>
+                                    <input type="text" class="input-control" id="cfg-ssh-host">
+                                </div>
+                                <div class="input-group" style="grid-column: span 1;">
+                                    <label for="cfg-ssh-port">SSH_PORT</label>
+                                    <input type="number" class="input-control" id="cfg-ssh-port" value="22" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="cfg-ssh-user">SSH_USERNAME</label>
+                                    <input type="text" class="input-control" id="cfg-ssh-user">
+                                </div>
+                                <div class="input-group">
+                                    <label for="cfg-ssh-pass">SSH_PASSWORD</label>
+                                    <input type="password" class="input-control" id="cfg-ssh-pass">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="cfg-ssh-key-path">SSH_PRIVATE_KEY_PATH (Key path on server host)</label>
+                                <input type="text" class="input-control" id="cfg-ssh-key-path" placeholder="e.g. ~/.ssh/id_rsa">
+                            </div>
+                            <div class="input-group">
+                                <label for="cfg-ssh-key-pass">SSH_PRIVATE_KEY_PASSPHRASE</label>
+                                <input type="password" class="input-control" id="cfg-ssh-key-pass">
+                            </div>
+
+                            <div class="config-section-title">Disk Log Rotation Settings</div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label for="cfg-log-bytes">LOG_ROTATION_MAX_BYTES</label>
+                                    <input type="number" class="input-control" id="cfg-log-bytes" required>
+                                </div>
+                                <div class="input-group">
+                                    <label for="cfg-log-backups">LOG_ROTATION_BACKUPS</label>
+                                    <input type="number" class="input-control" id="cfg-log-backups" required>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div style="margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; justify-content: flex-end;">
+                        <button type="submit" class="btn" style="width: auto; padding: 12px 40px;" id="btn-save-settings">Save Configurations & Reboot Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: NODE HEALTHCHECK -->
+        <div class="tab-content" id="tab-nodes">
+            <div class="panel">
+                <div class="panel-title">
+                    <span>🔌 Container Clusters & Docker Daemons Healthchecks</span>
+                    <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary);">Tests active connectivity to hosts and API clusters configured in hosts.yaml</span>
+                </div>
+                
+                <div class="nodes-grid" id="nodes-container">
+                    <div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">
+                        Reading hosts.yaml configuration...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: SYSTEM LOGS -->
+        <div class="tab-content" id="tab-logs">
+            <div class="panel" style="padding: 20px;">
+                <div class="logs-control-row">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <span style="font-weight: 700;">📟 System Log Streamer:</span>
+                        <select id="log-file-selector" class="select-input" style="width: 260px; padding: 8px 12px;" onchange="loadLogs()">
+                            <option value="infra_events">Webhook Event Logs (infra_events.log)</option>
+                            <option value="remediation_history">Rescue Command Executions (remediation_history.log)</option>
+                        </select>
+                        <button class="btn btn-secondary" style="width: auto; padding: 8px 16px; font-size: 0.8rem;" onclick="loadLogs()">Refresh</button>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="log-auto-refresh" style="cursor: pointer;" onchange="toggleLogAutoRefresh()">
+                        <label for="log-auto-refresh" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; user-select: none;">Auto-tail Stream (Every 3s)</label>
+                    </div>
+                </div>
+
+                <div class="logs-viewer-terminal" id="logs-terminal">Loading log contents...</div>
+            </div>
+        </div>
+
+        <!-- TAB CONTENT: USER MANAGEMENT (ADMIN ONLY) -->
+        <div class="tab-content" id="tab-users">
+            <div class="dashboard-main">
+                
+                <!-- COLUMN 1: USER REGISTRY TABLE -->
+                <div class="panel">
+                    <div class="panel-title">👤 Registered Access Users</div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Active Authorization Role (Rank)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                                        Fetching users list...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- COLUMN 2: CREATE NEW USER FORM -->
+                <div class="panel">
+                    <div class="panel-title">➕ Add New Console User</div>
+                    <form style="padding: 20px;" onsubmit="createNewUser(event)">
+                        <div class="input-group">
+                            <label for="new-username">Username</label>
+                            <input type="text" class="input-control" id="new-username" placeholder="e.g. developer_operator" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-password">Password</label>
+                            <input type="password" class="input-control" id="new-password" placeholder="Min. 6 chars" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-role">Authorization Rank</label>
+                            <select id="new-role" class="select-input">
+                                <option value="viewer">Viewer 👁️ (Read-only access)</option>
+                                <option value="operator">Operator 🔌 (Trigger Pings/Simulations)</option>
+                                <option value="admin">Administrator 👑 (Full settings & users edit)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn" style="margin-top: 15px;">Register User</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TOAST POPUP NOTIFICATION -->
+    <div class="toast" id="toast">
+        <span style="font-weight: 700;" id="toast-title">Notification</span>: 
+        <span id="toast-message">Task completed.</span>
+    </div>
+
+    <script>
+        let sessionToken = localStorage.getItem("x-session-token");
+        let userProfile = JSON.parse(localStorage.getItem("user-profile") || "null");
+        
+        let activeTab = "dashboard";
+        let logAutoRefreshInterval = null;
+        let activeStatsInterval = null;
+
+        // Perform initial auth checks on boot
+        window.onload = function() {
+            checkAuthStatus();
+        };
+
+        function showToast(title, msg, isError = false) {
+            const toast = document.getElementById("toast");
+            const titleEl = document.getElementById("toast-title");
+            const msgEl = document.getElementById("toast-message");
+            
+            toast.style.borderLeft = isError ? "3px solid var(--critical)" : "3px solid var(--success)";
+            titleEl.textContent = title;
+            msgEl.textContent = msg;
+            
+            toast.classList.add("show");
+            setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
+
+        // ======================================================================
+        // SYSTEM BOOT AND AUTHENTICATION ACTIONS
+        // ======================================================================
+        function checkAuthStatus() {
+            fetch("/api/auth/status")
+                .then(res => res.json())
+                .then(data => {
+                    const lockScreen = document.getElementById("lock-screen");
+                    const setupView = document.getElementById("setup-wizard-view");
+                    const loginView = document.getElementById("login-form-view");
+                    const lockHeader = document.getElementById("lock-header-title");
+                    
+                    if (!data.initialized) {
+                        // First-run wizard required
+                        lockScreen.style.display = "flex";
+                        setupView.style.display = "flex";
+                        loginView.style.display = "none";
+                        lockHeader.textContent = "CodeTir Installation Setup";
+                    } else {
+                        // System initialized, check if user session exists and is alive
+                        lockHeader.textContent = "CodeTir Gateway Lock";
+                        setupView.style.display = "none";
+                        
+                        if (sessionToken && userProfile) {
+                            // Verify session by calling /api/auth/me
+                            verifyActiveSession();
+                        } else {
+                            // Show standard credentials login
+                            lockScreen.style.display = "flex";
+                            loginView.style.display = "flex";
+                        }
+                    }
+                })
+                .catch(err => {
+                    showToast("System Offline", "Failed to communicate with API server.", true);
+                });
+        }
+
+        function verifyActiveSession() {
+            fetch("/api/auth/me", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => {
+                if (res.status === 200) {
+                    return res.json();
+                } else {
+                    throw new Error("Invalid session");
+                }
+            })
+            .then(user => {
+                localStorage.setItem("user-profile", JSON.stringify(user));
+                userProfile = user;
+                
+                // Session validated successfully! Launch main workspace console
+                document.getElementById("lock-screen").style.display = "none";
+                document.getElementById("window").style.display = "flex";
+                
+                initializeConsole();
+                showToast("Welcome Back", `${user.username} successfully signed in.`);
+            })
+            .catch(() => {
+                // Clear stale credentials and force login screen
+                localStorage.removeItem("x-session-token");
+                localStorage.removeItem("user-profile");
+                sessionToken = null;
+                userProfile = null;
+                
+                document.getElementById("lock-screen").style.display = "flex";
+                document.getElementById("login-form-view").style.display = "flex";
+            });
+        }
+
+        function submitSetup() {
+            const tokenVal = document.getElementById("setup-token").value.trim();
+            const userVal = document.getElementById("setup-user").value.trim();
+            const passVal = document.getElementById("setup-pass").value;
+            
+            if (!tokenVal || !userVal || !passVal) {
+                alert("Please fill all setup fields.");
+                return;
+            }
+            if (passVal.length < 6) {
+                alert("Administrator password must be at least 6 characters long.");
+                return;
+            }
+            
+            fetch("/api/auth/setup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    gateway_token: tokenVal,
+                    username: userVal,
+                    password: passVal
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    showToast("System Ready", "Administrator account created successfully!");
+                    // Switch to login form immediately
+                    checkAuthStatus();
+                } else {
+                    alert(data.detail || "Initialization setup failed.");
+                }
+            })
+            .catch(err => alert("Network communication error."));
+        }
+
+        function submitLogin() {
+            const userVal = document.getElementById("login-username").value.trim();
+            const passVal = document.getElementById("login-password").value;
+            
+            if (!userVal || !passVal) {
+                alert("Please fill in both fields.");
+                return;
+            }
+            
+            fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    username: userVal,
+                    password: passVal
+                })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    sessionToken = data.session_token;
+                    userProfile = { username: data.username, role: data.role };
+                    
+                    localStorage.setItem("x-session-token", sessionToken);
+                    localStorage.setItem("user-profile", JSON.stringify(userProfile));
+                    
+                    document.getElementById("lock-screen").style.display = "none";
+                    document.getElementById("window").style.display = "flex";
+                    
+                    initializeConsole();
+                    showToast("Access Granted", `Welcome back, ${data.username}!`);
+                } else {
+                    alert(data.detail || "Invalid login credentials.");
+                }
+            })
+            .catch(err => alert("Network communication error."));
+        }
+
+        function logout() {
+            if (sessionToken) {
+                fetch("/api/auth/logout", {
+                    method: "POST",
+                    headers: { "X-Session-Token": sessionToken }
+                }).finally(() => {
+                    localStorage.removeItem("x-session-token");
+                    localStorage.removeItem("user-profile");
+                    sessionToken = null;
+                    userProfile = null;
+                    
+                    if (logAutoRefreshInterval) clearInterval(logAutoRefreshInterval);
+                    if (activeStatsInterval) clearInterval(activeStatsInterval);
+                    
+                    document.getElementById("lock-screen").style.display = "flex";
+                    document.getElementById("window").style.display = "none";
+                    checkAuthStatus();
+                });
+            }
+        }
+
+        function initializeConsole() {
+            // Update username UI indicators
+            const roleLabel = userProfile.role.toUpperCase();
+            document.getElementById("user-badge-header").textContent = `[${roleLabel}] ${userProfile.username}`;
+            
+            // Apply client-side RBAC gating
+            applyRBACGating();
+
+            fetchStats();
+            if (activeStatsInterval) clearInterval(activeStatsInterval);
+            activeStatsInterval = setInterval(fetchStats, 5000);
+            
+            fetchNodes();
+            
+            // Automatically launch the onboarding tour on first-time login
+            setTimeout(() => { startTour(false); }, 800);
+        }
+
+        // Apply client-side form lock-downs depending on user rank
+        function applyRBACGating() {
+            const role = userProfile.role.toLowerCase();
+            
+            // Show User Management Tab for admins only
+            const usersTabBtn = document.getElementById("btn-tab-users");
+            usersTabBtn.style.display = (role === "admin") ? "block" : "none";
+            
+            // Rules Tab Gating
+            const btnSaveRules = document.getElementById("btn-save-rules");
+            const rulesTextarea = document.getElementById("rules-textarea");
+            if (role !== "admin") {
+                if (btnSaveRules) btnSaveRules.style.display = "none";
+                if (rulesTextarea) rulesTextarea.disabled = true;
+            } else {
+                if (btnSaveRules) btnSaveRules.style.display = "block";
+                if (rulesTextarea) rulesTextarea.disabled = false;
+            }
+            
+            // Settings Tab Gating
+            const btnSaveSettings = document.getElementById("btn-save-settings");
+            const configFormInputs = document.querySelectorAll("#config-form input, #config-form select");
+            if (role !== "admin") {
+                if (btnSaveSettings) btnSaveSettings.style.display = "none";
+                configFormInputs.forEach(input => input.disabled = true);
+            } else {
+                if (btnSaveSettings) btnSaveSettings.style.display = "block";
+                configFormInputs.forEach(input => input.disabled = false);
+            }
+            
+            // Webhook Simulation Ingress Gating
+            const simSubmitBtn = document.getElementById("sim-submit-btn");
+            const simInputs = document.querySelectorAll("#tab-dashboard form input, #tab-dashboard form select");
+            if (role === "viewer") {
+                if (simSubmitBtn) {
+                    simSubmitBtn.disabled = true;
+                    simSubmitBtn.textContent = "Operator/Admin Access Only";
+                }
+                simInputs.forEach(input => input.disabled = true);
+            } else {
+                if (simSubmitBtn) {
+                    simSubmitBtn.disabled = false;
+                    simSubmitBtn.textContent = "Dispatch Simulated Event";
+                }
+                simInputs.forEach(input => input.disabled = false);
+            }
+        }
+
+        function switchTab(tabId) {
+            // Check admin restriction for users tab
+            if (tabId === "users" && userProfile.role.toLowerCase() !== "admin") {
+                showToast("Access Denied", "Only administrators can access user directories.", true);
+                return;
+            }
+
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
+            
+            if (activeTab === "logs" && tabId !== "logs") {
+                document.getElementById("log-auto-refresh").checked = false;
+                toggleLogAutoRefresh();
+            }
+
+            activeTab = tabId;
+            document.getElementById(`btn-tab-${tabId}`).classList.add("active");
+            document.getElementById(`tab-${tabId}`).classList.add("active");
+            
+            if (tabId === "dashboard") {
+                fetchStats();
+            } else if (tabId === "rules") {
+                loadRules();
+            } else if (tabId === "settings") {
+                loadConfig();
+            } else if (tabId === "nodes") {
+                fetchNodes();
+            } else if (tabId === "logs") {
+                loadLogs();
+            } else if (tabId === "users") {
+                loadUsersList();
+            }
+        }
+
+        // ======================================================================
+        // TAB 1: TELEMETRY & STATS INGESTION
+        // ======================================================================
+        function fetchStats() {
+            if (!sessionToken) return;
+            
+            fetch("/stats", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => {
+                if (res.status === 401 || res.status === 403) {
+                    logout();
+                    throw new Error("Unauthorized");
+                }
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById("stat-uptime").textContent = data.server_uptime.readable;
+                document.getElementById("stat-processed").textContent = data.event_telemetry.total_processed_events;
+                
+                const sev = data.event_telemetry.processed_by_severity;
+                document.getElementById("stat-severities").textContent = `CRIT: ${sev.CRITICAL || 0} | WARN: ${sev.WARNING || 0} | INFO: ${sev.INFO || 0}`;
+                
+                const rem = data.automated_remediations;
+                document.getElementById("stat-success").textContent = rem.success_rate_percent + "%";
+                document.getElementById("stat-totals").textContent = `${rem.succeeded_count} OK | ${rem.failed_count} Fail`;
+                
+                const conf = data.active_configuration_profile;
+                document.getElementById("stat-rules").textContent = `${conf.active_routing_rules} Rules`;
+                document.getElementById("stat-window").textContent = `Window: ${conf.deduplication_window_seconds}s`;
+
+                const ledger = document.getElementById("ledger-body");
+                const history = rem.recent_remediation_history;
+                
+                if (history && history.length > 0) {
+                    ledger.innerHTML = "";
+                    history.forEach((item, index) => {
+                        const date = new Date(item.timestamp * 1000).toLocaleString();
+                        const statusBadge = item.status === 0 
+                            ? `<span class="badge badge-success">OK</span>` 
+                            : `<span class="badge badge-critical">FAIL (${item.status})</span>`;
+                            
+                        const logId = `log-${index}`;
+                        
+                        ledger.innerHTML += `
+                            <tr>
+                                <td>${date}</td>
+                                <td><span class="snippet">${item.host}</span></td>
+                                <td>${item.service}</td>
+                                <td><span class="snippet" style="font-size: 0.8rem; font-family: monospace;">$ ${item.command}</span></td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <button class="btn-link" onclick="toggleLogs('${logId}')">zsh log</button>
+                                </td>
+                            </tr>
+                            <tr id="${logId}" style="display: none;">
+                                <td colspan="6" style="padding: 10px 14px; background: rgba(0,0,0,0.15);">
+                                    <div class="terminal-box">$ cat remote_remediation.log\n${item.result}</div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    ledger.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                                No rescue transactions recorded in SQLite ledger.
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(err => console.error("Telemetry error: ", err));
+        }
+
+        function toggleLogs(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === "none" ? "table-row" : "none";
+        }
+
+        function toggleSimPlatformFields() {
+            const platform = document.getElementById("sim-platform").value;
+            const k8sFields = document.getElementById("sim-k8s-fields");
+            const dockerFields = document.getElementById("sim-docker-fields");
+            
+            if (platform === "kubernetes") {
+                k8sFields.style.display = "block";
+                dockerFields.style.display = "none";
+            } else {
+                k8sFields.style.display = "none";
+                dockerFields.style.display = "block";
+            }
+        }
+
+        function simulateWebhook(event) {
+            event.preventDefault();
+            
+            const source = document.getElementById("event-source").value.trim();
+            const service = document.getElementById("event-service").value.trim();
+            const severity = document.getElementById("event-severity").value;
+            const message = document.getElementById("event-message").value.trim();
+            
+            const platform = document.getElementById("sim-platform").value;
+            
+            const payload = {
+                source: source,
+                service: service,
+                severity: severity,
+                message: message,
+                metadata: {
+                    platform: platform
+                }
+            };
+            
+            if (platform === "kubernetes") {
+                payload.metadata.k8s_namespace = document.getElementById("event-namespace").value.trim();
+                payload.metadata.k8s_pod = document.getElementById("event-pod").value.trim();
+            } else {
+                payload.metadata.docker_container = document.getElementById("event-container").value.trim();
+            }
+            
+            fetch("/api/simulate", {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === "accepted") {
+                    showToast("Dispatch Queue", `Accepted into background healing queue: ${service}`);
+                    setTimeout(fetchStats, 1200);
+                } else {
+                    showToast("Error", data.detail || "Failed to dispatch.", true);
+                }
+            })
+            .catch(err => showToast("Error", "Network failure.", true));
+        }
+
+        // ======================================================================
+        // TAB 2: YAML RULES VISUAL CODE EDITOR
+        // ======================================================================
+        function loadRules() {
+            if (!sessionToken) return;
+            const textarea = document.getElementById("rules-textarea");
+            const errAlert = document.getElementById("yaml-error-alert");
+            
+            errAlert.style.display = "none";
+            textarea.value = "Reading rules.yaml from file system...";
+            
+            fetch("/api/rules", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    showToast("Error", "Failed to read rules.yaml: " + data.error, true);
+                    textarea.value = "";
+                } else {
+                    textarea.value = data.rules_yaml;
+                }
+            })
+            .catch(err => showToast("Error", "Failed to fetch rules.", true));
+        }
+
+        function saveRules() {
+            if (!sessionToken) return;
+            const textarea = document.getElementById("rules-textarea");
+            const errAlert = document.getElementById("yaml-error-alert");
+            
+            errAlert.style.display = "none";
+            const newYaml = textarea.value;
+            
+            fetch("/api/rules", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify({ rules_yaml: newYaml })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 400) {
+                    errAlert.textContent = data.detail || "Invalid YAML Syntax.";
+                    errAlert.style.display = "block";
+                    showToast("YAML Error", "Rules parsing validation failed.", true);
+                } else if (res.status === 200) {
+                    showToast("Rules Hot-Reload", "Saving active routing config successfully!");
+                    loadRules();
+                } else {
+                    showToast("Unauthorized", "Access denied.", true);
+                }
+            })
+            .catch(err => showToast("Error", "Failed to contact rules dispatcher.", true));
+        }
+
+        // ======================================================================
+        // TAB 3: SYSTEM .ENV GESTOR & SETTINGS CONTROL
+        // ======================================================================
+        function loadConfig() {
+            if (!sessionToken) return;
+            
+            fetch("/api/config", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Populate variables dynamically
+                document.getElementById("cfg-gateway-token").value = data.GATEWAY_TOKEN || "";
+                document.getElementById("cfg-dedup-seconds").value = data.DEDUPLICATION_WINDOW_SECONDS || "300";
+                document.getElementById("cfg-digest-seconds").value = data.DIGEST_INTERVAL_SECONDS || "3600";
+                
+                document.getElementById("cfg-telegram").value = data.TELEGRAM_BOT_TOKEN || "";
+                document.getElementById("cfg-telegram-chat").value = data.TELEGRAM_CHAT_ID || "";
+                document.getElementById("cfg-discord").value = data.DISCORD_WEBHOOK_URL || "";
+                document.getElementById("cfg-slack").value = data.SLACK_WEBHOOK_URL || "";
+                
+                document.getElementById("cfg-ssh-host").value = data.SSH_HOST || "";
+                document.getElementById("cfg-ssh-port").value = data.SSH_PORT || "22";
+                document.getElementById("cfg-ssh-user").value = data.SSH_USERNAME || "";
+                document.getElementById("cfg-ssh-pass").value = data.SSH_PASSWORD || "";
+                document.getElementById("cfg-ssh-key-path").value = data.SSH_PRIVATE_KEY_PATH || "";
+                document.getElementById("cfg-ssh-key-pass").value = data.SSH_PRIVATE_KEY_PASSPHRASE || "";
+                
+                document.getElementById("cfg-log-bytes").value = data.LOG_ROTATION_MAX_BYTES || "5242880";
+                document.getElementById("cfg-log-backups").value = data.LOG_ROTATION_BACKUP_COUNT || "3";
+            })
+            .catch(err => showToast("Error", "Failed to retrieve configuration defaults.", true));
+        }
+
+        function saveConfig(event) {
+            event.preventDefault();
+            if (!sessionToken) return;
+            
+            const payload = {
+                GATEWAY_TOKEN: document.getElementById("cfg-gateway-token").value.trim(),
+                DEDUPLICATION_WINDOW_SECONDS: parseInt(document.getElementById("cfg-dedup-seconds").value),
+                DIGEST_INTERVAL_SECONDS: parseInt(document.getElementById("cfg-digest-seconds").value),
+                
+                TELEGRAM_BOT_TOKEN: document.getElementById("cfg-telegram").value.trim() || null,
+                TELEGRAM_CHAT_ID: document.getElementById("cfg-telegram-chat").value.trim() || null,
+                DISCORD_WEBHOOK_URL: document.getElementById("cfg-discord").value.trim() || null,
+                SLACK_WEBHOOK_URL: document.getElementById("cfg-slack").value.trim() || null,
+                
+                SSH_HOST: document.getElementById("cfg-ssh-host").value.trim() || null,
+                SSH_PORT: parseInt(document.getElementById("cfg-ssh-port").value),
+                SSH_USERNAME: document.getElementById("cfg-ssh-user").value.trim() || null,
+                SSH_PASSWORD: document.getElementById("cfg-ssh-pass").value || null,
+                SSH_PRIVATE_KEY_PATH: document.getElementById("cfg-ssh-key-path").value.trim() || null,
+                SSH_PRIVATE_KEY_PASSPHRASE: document.getElementById("cfg-ssh-key-pass").value || null,
+                
+                LOG_ROTATION_MAX_BYTES: parseInt(document.getElementById("cfg-log-bytes").value),
+                LOG_ROTATION_BACKUP_COUNT: parseInt(document.getElementById("cfg-log-backups").value)
+            };
+            
+            fetch("/api/config", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (res.status === 200) {
+                    showToast("Config Saved", "System Settings rebooted dynamically.");
+                    loadConfig();
+                } else {
+                    showToast("Failed", "Unauthorized Settings modification.", true);
+                }
+            })
+            .catch(err => showToast("Error", "Failed to update configurations.", true));
+        }
+
+        // ======================================================================
+        // TAB 4: NODES healthcheck & PARAMIKO ACTIVE PINGS
+        // ======================================================================
+        function fetchNodes() {
+            if (!sessionToken) return;
+            const container = document.getElementById("nodes-container");
+            
+            fetch("/api/nodes", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.nodes && data.nodes.length > 0) {
+                    container.innerHTML = "";
+                    data.nodes.forEach((alias, index) => {
+                        const cardId = `node-card-${index}`;
+                        container.innerHTML += `
+                            <div class="node-card" id="${cardId}">
+                                <div class="node-hdr">
+                                    <span class="node-alias">${alias}</span>
+                                    <span class="node-indicator" id="${cardId}-ind"></span>
+                                </div>
+                                <div class="node-details">Unchecked</div>
+                                <div class="ping-result-box" id="${cardId}-res"></div>
+                                <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.8rem; width:100%;" 
+                                    id="${cardId}-btn" onclick="pingNode('${alias}', '${cardId}')">Test SSH Connection</button>
+                            </div>
+                        `;
+                    });
+                }
+            })
+            .catch(err => console.error("Error reading node aliases.", err));
+        }
+
+        function pingNode(alias, cardId) {
+            if (!sessionToken) return;
+            
+            const btn = document.getElementById(`${cardId}-btn`);
+            const indicator = document.getElementById(`${cardId}-ind`);
+            const resultBox = document.getElementById(`${cardId}-res`);
+            const card = document.getElementById(cardId);
+            
+            btn.disabled = true;
+            btn.textContent = "Connecting SSH...";
+            indicator.className = "node-indicator";
+            resultBox.style.display = "none";
+            
+            fetch("/api/nodes/ping", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify({ host_alias: alias })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.textContent = "Test SSH Connection";
+                
+                const detailEl = card.querySelector(".node-details");
+                if (data.coordinates) {
+                    detailEl.innerHTML = `Target: <span class="snippet" style="font-size:0.75rem;">${data.coordinates}</span>`;
+                }
+
+                resultBox.style.display = "block";
+                
+                if (data.status === "online") {
+                    indicator.className = "node-indicator online";
+                    resultBox.innerHTML = `Success latency: ${data.latency_ms}ms\nOutput: ${data.check_output}\nMessage: ${data.message}`;
+                    showToast("Node Verified", `${alias} is online and operational!`);
+                } else if (data.status === "simulation") {
+                    indicator.className = "node-indicator simulation";
+                    resultBox.innerHTML = `[SIMULATION STATUS]\nMessage: ${data.message}`;
+                    showToast("Simulation", `Verified simulated node successfully!`, false);
+                } else {
+                    indicator.className = "node-indicator offline";
+                    resultBox.innerHTML = `Offline logs:\n${data.message}`;
+                    showToast("Node Failed", `Could not connect to SSH host ${alias}!`, true);
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.textContent = "Test SSH Connection";
+                indicator.className = "node-indicator offline";
+                resultBox.style.display = "block";
+                resultBox.textContent = "Internal network ping dispatcher error.";
+                showToast("Connection Error", "Network execution failed.", true);
+            });
+        }
+
+        // ======================================================================
+        // TAB 5: REALTIME ROTATING SYSTEM LOGS VIEW
+        // ======================================================================
+        function loadLogs() {
+            if (!sessionToken) return;
+            
+            const fileSelector = document.getElementById("log-file-selector");
+            const selectedFile = fileSelector.value;
+            const terminal = document.getElementById("logs-terminal");
+            
+            fetch(`/api/logs?file=${selectedFile}`, {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.lines && data.lines.length > 0) {
+                    terminal.innerHTML = "";
+                    data.lines.forEach(line => {
+                        let formattedLine = line;
+                        if (line.includes("[CRITICAL]") || line.includes("FAIL")) {
+                            formattedLine = `<span style="color: var(--critical);">${line}</span>`;
+                        } else if (line.includes("[WARNING]")) {
+                            formattedLine = `<span style="color: var(--warning);">${line}</span>`;
+                        } else if (line.includes("[INFO]") || line.includes("OK") || line.includes("SUCCESS")) {
+                            formattedLine = `<span style="color: var(--success);">${line}</span>`;
+                        }
+                        terminal.innerHTML += formattedLine + "\n";
+                    });
+                    
+                    terminal.scrollTop = terminal.scrollHeight;
+                } else {
+                    terminal.innerHTML = `$ cat ${data.filename}\n\nEmpty file. No operations recorded yet.`;
+                }
+            })
+            .catch(err => {
+                terminal.innerHTML = `System error trying to query active logs.`;
+            });
+        }
+
+        function toggleLogAutoRefresh() {
+            const activeCheckbox = document.getElementById("log-auto-refresh");
+            if (activeCheckbox.checked) {
+                showToast("Stream Enabled", "Auto-tailing system logs every 3 seconds.");
+                logAutoRefreshInterval = setInterval(loadLogs, 3000);
+            } else {
+                if (logAutoRefreshInterval) {
+                    clearInterval(logAutoRefreshInterval);
+                    logAutoRefreshInterval = null;
+                }
+            }
+        }
+
+        // ======================================================================
+        // TAB 6: USER MANAGEMENT & RBAC (ADMIN PRIVILEGES)
+        // ======================================================================
+        function loadUsersList() {
+            if (!sessionToken || userProfile.role.toLowerCase() !== "admin") return;
+            
+            const tbody = document.getElementById("users-table-body");
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px 0;">Loading registered users...</td></tr>`;
+            
+            fetch("/api/auth/users", {
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(res => res.json())
+            .then(users => {
+                tbody.innerHTML = "";
+                if (users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 40px 0;">No users in registry.</td></tr>`;
+                    return;
+                }
+                
+                users.forEach(u => {
+                    const isSelf = u.username.toLowerCase() === userProfile.username.toLowerCase();
+                    const selfBadge = isSelf ? ` <span style="font-size:0.65rem; color:var(--text-muted);">(You)</span>` : "";
+                    
+                    let roleBadgeClass = "role-badge role-viewer";
+                    if (u.role === "admin") roleBadgeClass = "role-badge role-admin";
+                    else if (u.role === "operator") roleBadgeClass = "role-badge role-operator";
+                    
+                    const roleSelect = `
+                        <select class="select-input" style="width: auto; padding: 4px 8px; font-size: 0.8rem;" 
+                            onchange="changeUserRole('${u.username}', this.value)" ${isSelf ? "disabled" : ""}>
+                            <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
+                            <option value="operator" ${u.role==='operator'?'selected':''}>Operator</option>
+                            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                        </select>
+                    `;
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>
+                                <span class="snippet" style="font-weight:700;">${u.username}</span>
+                                ${selfBadge}
+                            </td>
+                            <td>
+                                <span class="${roleBadgeClass}">${u.role}</span>
+                            </td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap: 12px;">
+                                    ${roleSelect}
+                                    <button class="btn btn-secondary" style="width:auto; padding: 6px 12px; font-size:0.75rem;" 
+                                        onclick="changeUserPasswordPrompt('${u.username}')">Key Pass</button>
+                                    <button class="btn btn-danger" style="width:auto; padding: 6px 12px; font-size:0.75rem;" 
+                                        onclick="deleteUser('${u.username}')" ${isSelf ? "disabled" : ""}>Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            })
+            .catch(err => {
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--critical); padding: 40px 0;">Error listing user registry.</td></tr>`;
+            });
+        }
+
+        function createNewUser(event) {
+            event.preventDefault();
+            if (!sessionToken) return;
+            
+            const userEl = document.getElementById("new-username");
+            const passEl = document.getElementById("new-password");
+            const roleEl = document.getElementById("new-role");
+            
+            const payload = {
+                username: userEl.value.trim(),
+                password: passEl.value,
+                role: roleEl.value
+            };
+            
+            if (payload.password.length < 6) {
+                alert("Password must be at least 6 characters.");
+                return;
+            }
+            
+            fetch("/api/auth/users", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    showToast("Registered", `User ${payload.username} registered as ${payload.role}.`);
+                    userEl.value = "";
+                    passEl.value = "";
+                    loadUsersList();
+                } else {
+                    alert(data.detail || "Failed to create user.");
+                }
+            })
+            .catch(err => alert("Communication error."));
+        }
+
+        function changeUserRole(username, newRole) {
+            if (!sessionToken) return;
+            
+            fetch(`/api/auth/users/${username}/role`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify({ role: newRole })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    showToast("Role Updated", `${username} promoted/demoted to ${newRole}.`);
+                    loadUsersList();
+                } else {
+                    alert(data.detail || "Failed to change user role.");
+                    loadUsersList();
+                }
+            })
+            .catch(err => alert("Communication error."));
+        }
+
+        function changeUserPasswordPrompt(username) {
+            const newPass = prompt(`Enter new password for user '${username}':`);
+            if (newPass === null) return; // cancelled
+            if (newPass.length < 6) {
+                alert("Password must be at least 6 characters long.");
+                return;
+            }
+            
+            fetch(`/api/auth/users/${username}/password`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Session-Token": sessionToken
+                },
+                body: JSON.stringify({ password: newPass })
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    showToast("Password Saved", `Updated login credentials for '${username}' successfully.`);
+                } else {
+                    alert(data.detail || "Failed to update password.");
+                }
+            })
+            .catch(err => alert("Communication error."));
+        }
+
+        function deleteUser(username) {
+            if (!confirm(`Are you absolutely sure you want to delete user account '${username}'? This cannot be undone.`)) return;
+            
+            fetch(`/api/auth/users/${username}`, {
+                method: "DELETE",
+                headers: { "X-Session-Token": sessionToken }
+            })
+            .then(async res => {
+                const data = await res.json();
+                if (res.status === 200) {
+                    showToast("Deleted", `Removed account '${username}' successfully.`);
+                    loadUsersList();
+                } else {
+                    alert(data.detail || "Failed to delete user.");
+                }
+            })
+            .catch(err => alert("Communication error."));
+        }
+
+        // ======================================================================
+        // INTERACTIVE ONBOARDING TOUR
+        // ======================================================================
+        const tourSteps = [
+            {
+                tab: "dashboard",
+                targetId: "btn-tab-dashboard",
+                title: "📊 Container Command Center",
+                content: "Welcome to CodeTir Systems! This is your live self-healing operations dashboard. Monitor success rates, track Docker container and Kubernetes pod healing ledger operations, and dispatch simulated webhooks."
+            },
+            {
+                tab: "rules",
+                targetId: "btn-tab-rules",
+                title: "📝 Self-Healing Rules Engine",
+                content: "Author dynamic routing patterns matching your container platforms. Bind alerting triggers to specific healers (docker_healer, k8s_healer) and execute hot-reloads instantly."
+            },
+            {
+                tab: "settings",
+                targetId: "btn-tab-settings",
+                title: "⚙️ Cluster Configurations",
+                content: "Configure default credentials, slack/discord channels, local/remote Docker Hosts, and Kubernetes namespaces or kubeconfig coordinates in real-time."
+            },
+            {
+                tab: "nodes",
+                targetId: "btn-tab-nodes",
+                title: "🔌 Cluster & Daemons Directory",
+                content: "Assess container platforms configured inside hosts.yaml. Click to ping Docker sockets or verify Kubeconfig cluster control plane availability dynamically."
+            },
+            {
+                tab: "logs",
+                targetId: "btn-tab-logs",
+                title: "📟 Real-time System Logs",
+                content: "Scroll through running systems output. Tail active alerts or docker/kubernetes healing events as they are processed in real-time."
+            },
+            {
+                tab: "users",
+                targetId: "btn-tab-users",
+                title: "👤 User Directory & RBAC",
+                content: "As an Administrator, you can configure granular Role-Based Access Controls here. Register team accounts, assign ranks (Admin, Operator, Viewer), update passwords, or prune access privileges."
+            }
+        ];
+
+        let currentTourStep = 0;
+
+        function startTour(force = false) {
+            const completed = localStorage.getItem("codetir-tour-completed");
+            if (completed && !force) return;
+
+            currentTourStep = 0;
+            document.getElementById("tour-overlay").style.display = "flex";
+            showTourStep();
+        }
+
+        function showTourStep() {
+            // Remove highlight classes
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("tour-highlight"));
+
+            const step = tourSteps[currentTourStep];
+            
+            // Skip the admin-only users tab if this user is not an admin
+            if (step.targetId === "btn-tab-users" && userProfile.role.toLowerCase() !== "admin") {
+                nextTourStep();
+                return;
+            }
+
+            // Switch to the step's tab automatically
+            switchTab(step.tab);
+
+            // Highlight target element
+            const targetBtn = document.getElementById(step.targetId);
+            if (targetBtn) {
+                targetBtn.classList.add("tour-highlight");
+            }
+
+            // Update modal text
+            document.getElementById("tour-step-counter").textContent = `${currentTourStep + 1} of ${tourSteps.length}`;
+            document.getElementById("tour-step-title").innerHTML = step.title;
+            document.getElementById("tour-step-content").textContent = step.content;
+
+            // Change button text if it is the last step
+            const nextBtn = document.getElementById("tour-next-btn");
+            if (currentTourStep === tourSteps.length - 1 || (currentTourStep === tourSteps.length - 2 && userProfile.role.toLowerCase() !== "admin")) {
+                nextBtn.textContent = "Finish Tour 🎉";
+            } else {
+                nextBtn.textContent = "Next Step ➔";
+            }
+        }
+
+        function nextTourStep() {
+            currentTourStep++;
+            
+            const isAdmin = userProfile.role.toLowerCase() === "admin";
+            const maxSteps = isAdmin ? tourSteps.length : tourSteps.length - 1;
+
+            if (currentTourStep >= maxSteps) {
+                finishTour();
+            } else {
+                showTourStep();
+            }
+        }
+
+        function skipTour() {
+            localStorage.setItem("codetir-tour-completed", "true");
+            document.getElementById("tour-overlay").style.display = "none";
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("tour-highlight"));
+            // Return to main dashboard
+            switchTab("dashboard");
+            showToast("Tour Skipped", "You can restart the onboarding tour anytime by clicking 'Take Tour' in the top bar.");
+        }
+
+        function finishTour() {
+            localStorage.setItem("codetir-tour-completed", "true");
+            document.getElementById("tour-overlay").style.display = "none";
+            document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("tour-highlight"));
+            // Return to main dashboard
+            switchTab("dashboard");
+            showToast("Tour Completed", "Welcome aboard! You are ready to operate CodeTir Systems.");
+        }
+    </script>
+
+    <!-- ======================================================================
+         INTERACTIVE ONBOARDING TOUR HTML
+         ===================================================================== -->
+    <div class="tour-overlay" id="tour-overlay">
+        <div class="tour-card" id="tour-card">
+            <div class="tour-hdr">
+                <span>CodeTir Systems Onboarding</span>
+                <span id="tour-step-counter">1 of 6</span>
+            </div>
+            <div class="tour-title" id="tour-step-title">Step Title</div>
+            <div class="tour-body" id="tour-step-content">Step explanation contents go here.</div>
+            <div class="tour-footer">
+                <button class="btn btn-secondary" style="width: auto; padding: 8px 16px; font-size: 0.8rem;" onclick="skipTour()">Skip</button>
+                <button class="btn" style="width: auto; padding: 8px 24px; font-size: 0.8rem;" id="tour-next-btn" onclick="nextTourStep()">Next Step ➔</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -84,8 +84,8 @@ read -r run_now
 if [ "$run_now" = "y" ] || [ "$run_now" = "yes" ]; then
     echo -e "\033[32m🚀 Launching Webhook Gateway ASGI Server on http://localhost:8000...\033[0m"
     echo -e "\033[90mPress [Ctrl+C] inside terminal to shut down the server safely.\033[0m"
-    ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 else
     echo -e "\033[90mTo start the server manually, execute:\033[0m"
-    echo -e "   ./venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    echo -e "   ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 fi

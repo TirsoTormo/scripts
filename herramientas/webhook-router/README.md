@@ -1,8 +1,8 @@
-# 🛡️ Infrastructure Event Router & Webhook Gateway
+# 🛡️ **Webhook Router – Infrastructure Event Gateway**
 
-An enterprise-grade, asynchronous event router and automated service remediation server built in Python using **FastAPI**, **Paramiko (SSH)**, **SQLite**, **APScheduler**, and modern async communication clients.
-
-This server acts as a centralized ingress hub for infrastructure telemetry and monitoring alerts (Proxmox, Docker clusters, Cron scripts, Zabbix, etc.). It validates incoming requests, deduplicates redundant bursts, processes user-defined YAML routing rules in real-time, executes auto-recovery SSH commands, and broadcasts formatted alerts to Slack, Discord, and Telegram.
+[![](https://img.shields.io/badge/python-3.12%20%7C%203.11-blue)](https://www.python.org/)
+[![](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
+[![](https://img.shields.io/badge/status-production-success)]()
 
 ---
 
@@ -60,22 +60,35 @@ webhook-router/
 ├── .env                  # Configuration variables (Tokens, SSH targets, Chat webhooks)
 ├── .env.example          # Template environment configurations
 ├── hosts.yaml            # Cluster registry mapping node aliases to network coordinates
-├── gateway.db            # Central SQLite database file (Auto-generated at boot)
 ├── requirements.txt      # Dependency manifests
-├── main.py               # FastAPI entrypoint, APScheduler Lifespan worker & /stats API
-├── config.py             # central Settings module (Pydantic Settings type checks)
-├── models.py             # Event data contract schemas (Pydantic models)
-├── database.py           # SQLite Database manager (Deduplication, stats & remediation tables)
 ├── rules.yaml            # Hot-reloadable user routing rules configurations
-├── engine.py             # Core dynamic EventRouter, Deduplicator, and Digest collector
-├── handlers/             # Modular background task worker implementations
-│   ├── __init__.py       # Singleton registrations & handler maps
-│   ├── base.py           # Abstract Base Handler specification with retrying safe_post
-│   ├── logger.py         # FileLogger (Appends formatted event logs with rotation)
-│   ├── telegram.py       # Telegram broadcast notifier
-│   ├── discord.py        # Discord color-coded embed notifier
-│   ├── slack.py          # Slack blocks layout notifier
-│   └── ssh.py            # Automated SSH target command executor with SQLite logs
+├── run.py                # Main entrypoint helper script
+├── app/                  # Centralized application logic package
+│   ├── main.py           # FastAPI application definition and lifespan controller
+│   ├── api/              # HTTP routers division
+│   │   ├── auth.py       # Identity & access management (JWT and RBAC controllers)
+│   │   ├── deps.py       # FastAPI dependency injection functions
+│   │   ├── gateway.py    # Webhook Ingress & simulate webhook endpoints
+│   │   └── admin/        # Core admin endpoints: stats, rules, config, nodes, logs
+│   ├── core/             # Configuration & DB connection management
+│   │   ├── config.py     # Settings module (Pydantic Settings type check)
+│   │   ├── database.py   # SQLite database engine manager (async)
+│   │   └── security.py   # Cryptographic utilities (Bcrypt & JWT signing)
+│   ├── models/           # ORM and API Pydantic schemas
+│   │   ├── event.py      # Event and EventSeverity models
+│   │   └── orm.py        # SQLAlchemy Declarative base models (Users, records, sessions)
+│   ├── services/         # Core business logic processing engine
+│   │   └── router_engine.py # Core EventRouter, Deduplicator, and Digest collector
+│   ├── templates/        # HTML visual files
+│   │   └── dashboard.html # Single Page Application web console
+│   └── handlers/         # Modular background task worker implementations
+│       ├── __init__.py   # Singleton registrations & handler maps
+│       ├── base.py       # Abstract Base Handler specification with retrying safe_post
+│       ├── logger.py     # FileLogger (Appends formatted event logs with rotation)
+│       ├── telegram.py   # Telegram broadcast notifier
+│       ├── discord.py    # Discord color-coded embed notifier
+│       ├── slack.py      # Slack blocks layout notifier
+│       └── ssh.py        # Automated SSH target command executor with SQLite logs
 └── scripts/
     ├── generate_token.py # Helper to provision secure cryptographic API tokens
     └── test_interactive.py # Interactive CLI simulator tool (Menu-driven)
@@ -195,11 +208,13 @@ DIGEST_INTERVAL_SECONDS=3600
 ```
 
 ### 4. Startup the Gateway Server
-Launch the ASGI FastAPI server using Uvicorn:
+Launch the ASGI FastAPI server using python runner or Uvicorn:
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+python run.py
+# or
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-Upon startup, the server automatically boots up `gateway.db` SQLite storage.
+Upon startup, the server automatically boots up `data/gateway.db` SQLite storage.
 
 ### 5. Launch the Interactive CLI Alert Simulator
 In another terminal instance, execute the dynamic simulator tool to verify all features:

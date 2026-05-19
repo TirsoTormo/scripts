@@ -1,0 +1,6 @@
+[2026-05-18 09:50:38] [CRITICAL] [prod-db-01] docker-postgres: PostgreSQL main engine failed healthcheck checks. Unresponsive port 5432.
+[2026-05-18 09:50:44] [WARNING] [prod-db-01] docker-postgres: PostgreSQL main engine failed healthcheck checks. Unresponsive port 5432.
+[2026-05-18 09:50:49] [INFO] [prod-db-01] docker-postgres: PostgreSQL main engine failed healthcheck checks. Unresponsive port 5432.
+[2026-05-19 09:07:41] [CRITICAL] [k8s-local-cluster] k8s-pod-failure: Pod postgres-db-prod-abcde status CrashLoopBackOff
+[2026-05-19 09:12:55] [CRITICAL] [k8s-local-cluster] k8s-pod-failure: Pod postgres-db-prod-abcde status CrashLoopBackOff
+[2026-05-19 09:18:33] [CRITICAL] [k8s-local-cluster] k8s-pod-failure: Pod postgres-db-prod-abcde status CrashLoopBackOff

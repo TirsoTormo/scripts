@@ -1,0 +1,61 @@
+=== REMEDIATION: prod-db-01 | Host: SimulatedHost | Service: docker-postgres ===
+Command Executed: docker restart postgres || docker start postgres
+Exit Status: 0
+Execution Output:
+SIMULATION SUCCESS
+==================================================
+
+[2026-05-19 09:07:41] [K8S_HEALING] Namespace: default | Target: pod/postgres-db-prod-abcde | Command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force | Exit Code: 0
+Output:
+[SIMULATED KUBERNETES HEALING ACTION SUCCESSFUL]
+Resolved command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force
+Cluster connection simulated securely using context config: 'C:\Users\Usuario/.kube/config'
+Target action: successfully dispatched trigger sequence to API server.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[2026-05-19 09:07:41] [DOCKER_HEALING] Host: k8s-local-cluster | Container: k8s-pod-failure | Command: docker restart k8s-pod-failure | Exit Code: 1
+Output:
+Stdout:
+
+Stderr:
+"docker" no se reconoce como un comando interno o externo,
+programa o archivo por lotes ejecutable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[2026-05-19 09:12:55] [K8S_HEALING] Namespace: default | Target: pod/postgres-db-prod-abcde | Command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force | Exit Code: 0
+Output:
+[SIMULATED KUBERNETES HEALING ACTION SUCCESSFUL]
+Resolved command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force
+Cluster connection simulated securely using context config: 'C:\Users\Usuario/.kube/config'
+Target action: successfully dispatched trigger sequence to API server.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[2026-05-19 09:12:55] [DOCKER_HEALING] Host: k8s-local-cluster | Container: k8s-pod-failure | Command: docker restart k8s-pod-failure | Exit Code: 1
+Output:
+Stdout:
+
+Stderr:
+"docker" no se reconoce como un comando interno o externo,
+programa o archivo por lotes ejecutable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[2026-05-19 09:18:33] [K8S_HEALING] Namespace: default | Target: pod/postgres-db-prod-abcde | Command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force | Exit Code: 0
+Output:
+[SIMULATED KUBERNETES HEALING ACTION SUCCESSFUL]
+Resolved command: kubectl delete pod/postgres-db-prod-abcde -n default --grace-period=0 --force
+Cluster connection simulated securely using context config: 'C:\Users\Usuario/.kube/config'
+Target action: successfully dispatched trigger sequence to API server.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[2026-05-19 09:18:33] [DOCKER_HEALING] Host: k8s-local-cluster | Container: k8s-pod-failure | Command: docker restart k8s-pod-failure | Exit Code: 1
+Output:
+Stdout:
+
+Stderr:
+"docker" no se reconoce como un comando interno o externo,
+programa o archivo por lotes ejecutable.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
